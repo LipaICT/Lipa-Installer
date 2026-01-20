@@ -15,7 +15,7 @@ $Packages = @(
     @{ Name = "Firefox"; WingetId = "Mozilla.Firefox"; ChocolateyId = "firefox" },
     @{ Name = "Google Chrome"; WingetId = "Google.Chrome"; ChocolateyId = "googlechrome" },
     @{ Name = "Adobe Acrobat Reader"; WingetId = "Adobe.Acrobat.Reader.64-bit"; ChocolateyId = "adobereader" },
-    @{ Name = "Foxit PDF Reader"; WingetId = "XPFCG5NRKXQPKT"; ChocolateyId = "foxitreader" },
+    @{ Name = "Foxit PDF Reader"; WingetId = "Foxit.FoxitReader"; ChocolateyId = "foxitreader" },
     @{ Name = "Belgian EID middleware"; WingetId = "BelgianGovernment.eIDmiddleware"; ChocolateyId = "eid-belgium" },
     @{ Name = "Belgian EID viewer"; WingetId = "BelgianGovernment.eIDViewer"; ChocolateyId = "eid-belgium-viewer" },
     @{ Name = "OpenVPN Connect"; WingetId = "OpenVPNTechnologies.OpenVPNConnect"; ChocolateyId = "openvpn-connect" },
@@ -119,7 +119,7 @@ function Install-WithWinget {
     
     Write-Host "→ Installing $PackageName using winget..." -ForegroundColor Yellow
     
-    winget install -e --id $PackageId --accept-source-agreements --accept-package-agreements
+    winget install -e --id $PackageId --accept-source-agreements --accept-package-agreements --source winget
     
     $exitCode = $LASTEXITCODE
     
