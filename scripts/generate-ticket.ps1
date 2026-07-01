@@ -30,74 +30,34 @@ $localUserPassword = $ticketInfo["USER_PASSWORD"]
 
 $serialNumber = (Get-CimInstance Win32_BIOS).SerialNumber
 
-$installedPackages = @"
-- Firefox
-- Google Chrome
-- Rustdesk
-- Adobe Acrobat Reader
-- Foxit PDF Reader
-- Belgian EID middleware
-- Belgian EID viewer
-- OpenVPN Connect
-- VLC Media player
-- HP programmable key
-- MS Office 365 Apps
-- HP Support Assistant
-- HP Image Assistant
-- Splashtop
-"@
-
 # Format the output
 $output = @"
-Clean install
 
-Correcte Windows versie geïnstalleerd: 11
+Clean install Windows 11 en updates
+User clientadmin aangemaakt en beveiligd
+toestelnaam $deviceName
+Installatie standaard programma's Edge Chromium, Google Chrome, Firefox, Adobe reader, Foxit Reader
+HP Support Assistant en HPIA driver- en BIOS updates
+e-ID software gedownload en kaartlezer getest
+Camera en microfoon getest
+
+-toestel in domein:
+VPN connectie met server
+toestel gekoppeld aan het domein
+aangelogd als domeinuser x
+
+-toestel zonder domein:
+gebruiker $localuser aangemaakt met installatierechten
+
+Trend Micro en Office installatie
+Outlook instellen
+Aanmelden in OneDrive
+
 Apparaatnaam: $deviceName
 Serienummer van het apparaat: $serialNumber
-Alle updates en drivers geïnstalleerd  
 
-Hardware getest:
- - Camera
- - Microfoon
- - Wifi-module
- - Voeding (Kabel) 
-
-Lijst van geïnstalleerde pakketten:
-$installedPackages
-
-Lokale gebruiker clientadmin beveiligd 
-Lokale gebruiker $localUser met installatierechten
-
-Aangemeld bij MS365: FALSE
-Aangemeld bij Outlook: FALSE
-Aangemeld bij OneDrive: FALSE
-Trend Micro geïnstalleerd en geactiveerd: FALSE
-
-internal
 Lokale gebruiker clientadmin -> $clientAdminPassword
 Lokale gebruiker $localUser -> $localUserPassword
-TODO:
-- [ ] Voorzie labels op het toestel en doos
-- [ ] Noteer serienummers van producten
-
-- [ ] Test hardware -> Camera
-- [ ] Test hardware -> Microfoon
-- [ ] Test hardware -> Card reader
-- [ ] Test hardware -> Wifi-module
-- [ ] Test hardware -> Voeding (Kabel)
-- [ ] Test hardware -> extra hardware devices (scherm, printer, etc..)
-
-- [ ] Update klantendossier -> Lokale gebruikerswachtwoorden 
-- [ ] Update klantendossier -> Trendmicro (Enkel bij nieuwe Trendmicro-klant)
-- [ ] Update klantendossier -> M365 (Enkel bij nieuwe M365-licentie, admin account)
-- [ ] Voeg credentials toe aan Keeper (Avepoint, M365, enz..)
-- [ ] Koppel Trendmicro ID bij Autotask klant (Enkel bij eerste Trendmicro)
-
-- [ ] Voeg Datto toe (als de gebruiker een servicecontract heeft)
-
-- [ ] Tag sales in het ticket als je klaar bent (Bieke en Leen)
-- [ ] Kleef Lipa-sticker op toestel
-- [ ] Ga nog eens over het ticket en klantendossier en Keeper
 "@
 
 $output | Out-File -FilePath "$env:USERPROFILE\Desktop\autotask entry.txt"
