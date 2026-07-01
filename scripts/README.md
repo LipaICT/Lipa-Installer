@@ -7,5 +7,5 @@ The `main.ps1` script provides an interactive menu to select and run other autom
 
 To run the main menu script, open PowerShell and execute:
 ```powershell
-irm "https://raw.githubusercontent.com/CowsSayMoo/Lipa/refs/heads/main/scripts/main.ps1" | iex
+irm "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/main.ps1" | iex
 ```
