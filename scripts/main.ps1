@@ -24,7 +24,7 @@ function Show-Menu {
     Write-Host "3. Autotask Ticket Entry Generation Script"
     Write-Host "4. Move and rename splashtop"
     Write-Host "5. Update windows"
-    Write-Host "6. Exit"
+    Write-Host "6. Generate Spec Sheet"
     Write-Host "Enter your choice (1-6): " -NoNewline
 }
 
