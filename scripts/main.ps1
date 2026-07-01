@@ -62,8 +62,9 @@ while ($true) {
             Read-Host "Press Enter to continue..."
         }
         "6" {
-            Write-Host "Exiting..." -ForegroundColor Red
-            break
+            Write-Host "Generating spec sheet..." - ForegroundColor Cyan
+            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/scripts/refs/heads/main/device_info.ps1" | Invoke-Expression
+            Read-Host "Press Enter to continue..."
         }
         default {
             Write-Host "Invalid choice. Please enter a number between 1 and 4." -ForegroundColor Red
