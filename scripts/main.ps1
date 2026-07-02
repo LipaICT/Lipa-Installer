@@ -38,31 +38,31 @@ while ($true) {
     switch ($choice) {
         "1" {
             Write-Host "Running Package Installation Script..." -ForegroundColor Cyan
-            Invoke-Restmethod "https://raw.githubusercontent.com/CowsSayMoo/Lipa/refs/heads/main/scripts/package-installation.ps1" | Invoke-Expression
+            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/package-installation.ps1" | Invoke-Expression
             Read-Host "Press Enter to continue..."
         }
         "2" {
             Write-Host "Running Endpoint Configuration Script..." -ForegroundColor Cyan
-            Invoke-Restmethod "https://raw.githubusercontent.com/CowsSayMoo/Lipa/refs/heads/main/scripts/endpoint-configuration.ps1" | Invoke-Expression
+            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/endpoint-configuration.ps11" | Invoke-Expression
             Read-Host "Press Enter to continue..."
         }
         "3" {
             Write-Host "Running Autotask Ticket Entry Generation Script..." -ForegroundColor Cyan
-            Invoke-Restmethod "https://raw.githubusercontent.com/CowsSayMoo/Lipa/refs/heads/main/scripts/generate-ticket.ps1" | Invoke-Expression
+            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/generate-ticket.ps1" | Invoke-Expression
             Read-Host "Press Enter to continue..."
         }
          "4" {
             Write-Host "Running move and rename splashtop..." -ForegroundColor Cyan
-            Invoke-Restmethod "https://raw.githubusercontent.com/CowsSayMoo/Lipa/refs/heads/main/scripts/rename-and-move-splashtop.ps1" | Invoke-Expression
+            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/rename-and-move-splashtop.ps11" | Invoke-Expression
             Read-Host "Press Enter to continue..."
         }
          "5" {
             Write-Host "Running windows updates..." -ForegroundColor Cyan
-            Invoke-Restmethod "https://raw.githubusercontent.com/CowsSayMoo/Lipa/refs/heads/main/scripts/windows-update.ps1" | Invoke-Expression
+            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/windows-update.ps1" | Invoke-Expression
             Read-Host "Press Enter to continue..."
         }
         "6" {
-            Write-Host "Generating spec sheet..." - ForegroundColor Cyan
+            Write-Host "Generating spec sheet..." -ForegroundColor Cyan
             Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/scripts/refs/heads/main/device_info.ps1" | Invoke-Expression
             Read-Host "Press Enter to continue..."
         }
