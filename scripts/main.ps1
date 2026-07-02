@@ -25,7 +25,8 @@ function Show-Menu {
     Write-Host "4. Move and rename splashtop"
     Write-Host "5. Update windows"
     Write-Host "6. Generate Spec Sheet"
-    Write-Host "Enter your choice (1-6): " -NoNewline
+    Write-Host "7. Add device to AD domain"    
+    Write-Host "Enter your choice (1-7): " -NoNewline
 }
 
 # Main loop
@@ -64,6 +65,11 @@ while ($true) {
         "6" {
             Write-Host "Generating spec sheet..." -ForegroundColor Cyan
             Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/scripts/refs/heads/main/device_info.ps1" | Invoke-Expression
+            Read-Host "Press Enter to continue..."
+        }
+        "7" {
+            Write-Host "Adding device to AD domain..." -ForegroundColor Cyan
+            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/domain-add.ps1" | Invoke-Expression
             Read-Host "Press Enter to continue..."
         }
         default {
