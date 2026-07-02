@@ -43,7 +43,7 @@ while ($true) {
         }
         "2" {
             Write-Host "Running Endpoint Configuration Script..." -ForegroundColor Cyan
-            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/endpoint-configuration.ps11" | Invoke-Expression
+            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/endpoint-configuration.ps1" | Invoke-Expression
             Read-Host "Press Enter to continue..."
         }
         "3" {
@@ -53,7 +53,7 @@ while ($true) {
         }
          "4" {
             Write-Host "Running move and rename splashtop..." -ForegroundColor Cyan
-            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/rename-and-move-splashtop.ps11" | Invoke-Expression
+            Invoke-Restmethod "https://raw.githubusercontent.com/LipaICT/Lipa-Installer/refs/heads/main/scripts/rename-and-move-splashtop.ps1" | Invoke-Expression
             Read-Host "Press Enter to continue..."
         }
          "5" {
