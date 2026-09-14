@@ -6,11 +6,71 @@
     This script installs a list of packages from a given array. For each package, it attempts to install using winget,
     then falls back to chocolatey, and finally to a direct download if the previous methods fail.
     It logs successful and failed installations to separate files and shows installation progress.
+
+.NOTES
+    Winget is now invoked via its resolved absolute path instead of relying on the "winget" alias,
+    since the winget App Execution Alias is a per-user reparse point and is not reliably resolvable
+    when running as SYSTEM (e.g. via RMM/Intune/scheduled task deployments).
 #>
+
+# --- Resolve absolute path to winget.exe -----------------------------------
+function Get-WingetPath {
+    # Preferred: resolve via the installed Desktop App Installer package (works in SYSTEM context)
+    try {
+        $wingetPackage = Get-AppxPackage -Name "Microsoft.DesktopAppInstaller" -ErrorAction SilentlyContinue |
+            Sort-Object -Property Version -Descending | Select-Object -First 1
+
+        if ($wingetPackage) {
+            $candidate = Join-Path -Path $wingetPackage.InstallLocation -ChildPath "winget.exe"
+            if (Test-Path -Path $candidate) {
+                return $candidate
+            }
+        }
+    }
+    catch {
+        Write-Warning "Could not resolve winget via Get-AppxPackage: $_"
+    }
+
+    # Fallback 1: search the standard WindowsApps package folder (covers per-machine installs)
+    try {
+        $candidate = Get-ChildItem -Path "C:\Program Files\WindowsApps" -Filter "winget.exe" -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.Directory.Name -like "Microsoft.DesktopAppInstaller_*" } |
+            Sort-Object -Property FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+        if ($candidate) {
+            return $candidate
+        }
+    }
+    catch {
+        Write-Warning "Could not resolve winget via WindowsApps search: $_"
+    }
+
+    # Fallback 2: current user's App Execution Alias (works when run in user context)
+    $userAlias = Join-Path -Path $env:LOCALAPPDATA -ChildPath "Microsoft\WindowsApps\winget.exe"
+    if (Test-Path -Path $userAlias) {
+        return $userAlias
+    }
+
+    # Fallback 3: whatever is on PATH
+    $onPath = Get-Command winget -ErrorAction SilentlyContinue
+    if ($onPath) {
+        return $onPath.Source
+    }
+
+    return $null
+}
+
+$WingetExe = Get-WingetPath
+
+if (-not $WingetExe) {
+    Write-Warning "Could not resolve an absolute path to winget.exe. Winget installs will be skipped; chocolatey/download fallbacks will still run."
+}
+else {
+    Write-Host "Using winget at: $WingetExe" -ForegroundColor DarkGray
+}
 
 # Packages to install
 $Packages = @(
-    @{ Name = "Splashtop"; OpenUrl = "https://my.splashtop.eu/sos/packages/download/XW2PS2PZ5KSKEU" }
+    @{ Name = "Splashtop"; OpenUrl = "https://my.splashtop.eu/sos/packages/download/XW2PS2PZ5KSKEU" },
     @{ Name = "Rustdesk"; WingetId = "RustDesk.RustDesk"; ChocolateyId = "rustdesk" },
     @{ Name = "Firefox"; WingetId = "Mozilla.Firefox"; ChocolateyId = "firefox" },
     @{ Name = "Google Chrome"; WingetId = "Google.Chrome"; ChocolateyId = "googlechrome" },
@@ -20,9 +80,9 @@ $Packages = @(
     @{ Name = "Belgian EID viewer"; WingetId = "BelgianGovernment.eIDViewer"; ChocolateyId = "eid-belgium-viewer" },
     @{ Name = "OpenVPN Connect"; WingetId = "OpenVPNTechnologies.OpenVPNConnect"; ChocolateyId = "openvpn-connect" },
     @{ Name = "VLC Media player"; WingetId = ""; ChocolateyId = "vlc" },
-    @{ Name = "HP programmable key"; WingetId = "9MW15F21R5G8"},
+    @{ Name = "HP programmable key"; WingetId = "9MW15F21R5G8" },
     @{ Name = "HP Support Assistant"; ChocolateyId = "hpsupportassistant" },
-    @{ Name = "HP Image Assistant";  WingetId = " HP.ImageAssistant" ;ChocolateyId = "hpimageassistant" },
+    @{ Name = "HP Image Assistant"; WingetId = "HP.ImageAssistant"; ChocolateyId = "hpimageassistant" },
     @{ Name = "MS Office 365 Apps"; WingetId = "Microsoft.Office"; ChocolateyId = "office365business" }
 )
 
@@ -55,25 +115,25 @@ function Test-PackageInstalled {
         [string]$WingetId,
         [string]$ChocolateyId
     )
-    
+
     # Check winget
-    if ($WingetId) {
+    if ($WingetId -and $WingetExe) {
         Write-Host "Checking if $PackageName is installed via winget..." -ForegroundColor Gray
-        
+
         try {
             # Use Start-Job with timeout to prevent hanging
             $job = Start-Job -ScriptBlock {
-                param($id)
-                winget list --id $id 2>&1 | Out-String
-            } -ArgumentList $WingetId
-            
+                param($exe, $id)
+                & $exe list --id $id 2>&1 | Out-String
+            } -ArgumentList $WingetExe, $WingetId
+
             # Wait up to 10 seconds
             $completed = Wait-Job -Job $job -Timeout 10
-            
+
             if ($completed) {
                 $wingetCheckString = Receive-Job -Job $job
                 Remove-Job -Job $job -Force
-                
+
                 # Check if package is in the list
                 if ($wingetCheckString -match [regex]::Escape($WingetId)) {
                     Write-Host "✓ $PackageName is already installed (winget)" -ForegroundColor Green
@@ -90,7 +150,7 @@ function Test-PackageInstalled {
             Write-Warning "Error checking winget for $PackageName : $_"
         }
     }
-    
+
     # Check chocolatey
     if ($ChocolateyId) {
         if (Get-Command choco -ErrorAction SilentlyContinue) {
@@ -107,7 +167,7 @@ function Test-PackageInstalled {
             }
         }
     }
-    
+
     return $false
 }
 
@@ -116,13 +176,17 @@ function Install-WithWinget {
         [string]$PackageName,
         [string]$PackageId
     )
-    
-    Write-Host "→ Installing $PackageName using winget..." -ForegroundColor Yellow
-    
-    winget install -e --id $PackageId --accept-source-agreements --accept-package-agreements --source winget
-    
+
+    if (-not $WingetExe) {
+        throw "Winget executable could not be resolved"
+    }
+
+    Write-Host "→ Installing $PackageName using winget ($WingetExe)..." -ForegroundColor Yellow
+
+    & $WingetExe install -e --id $PackageId --accept-source-agreements --accept-package-agreements --source winget
+
     $exitCode = $LASTEXITCODE
-    
+
     if ($exitCode -eq 0 -or $exitCode -eq -1978335189) {
         Write-Host "✓ Successfully installed $PackageName using winget" -ForegroundColor Green
         return $true
@@ -139,7 +203,7 @@ function Install-WithChocolatey {
     )
 
     Write-Host "→ Installing $PackageName using chocolatey..." -ForegroundColor Yellow
-    
+
     choco install $PackageId -y
 
     if ($LASTEXITCODE -eq 0) {
@@ -164,10 +228,10 @@ function Install-Chocolatey {
         Set-ExecutionPolicy Bypass -Scope Process -Force
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1')) | Out-Null
-        
+
         # Refresh environment variables
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-        
+
         Write-Host "✓ Chocolatey installation completed" -ForegroundColor Green
     }
     catch {
@@ -185,20 +249,20 @@ $counter = 0
 foreach ($package in $Packages) {
     $counter++
     $name = $package.Name
-    
+
     Write-Progress-Message "[$counter/$($Packages.Count)] Processing: $name" "Cyan"
-    
+
     # Check if already installed
     if (Test-PackageInstalled -PackageName $name -WingetId $package.WingetId -ChocolateyId $package.ChocolateyId) {
         "Already installed: $name" | Out-File -FilePath $SuccessLog -Append
         continue
     }
-    
+
     $installed = $false
     $installMethod = ""
 
-    # Try Winget first (only if WingetId exists and no ChocolateyId-only package)
-    if ($package.WingetId) {
+    # Try Winget first (only if WingetId exists and winget was resolved)
+    if ($package.WingetId -and $WingetExe) {
         try {
             if (Install-WithWinget -PackageName $name -PackageId $package.WingetId) {
                 $installMethod = "winget"
