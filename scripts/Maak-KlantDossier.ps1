@@ -12,22 +12,64 @@
         - Security
 
 .NOTES
-    Pas de variabele $BasePath hieronder aan indien het pad naar "Klanten Dossiers" wijzigt.
+    De OneDrive/SharePoint-syncmap heet niet bij iedereen hetzelfde (bv. met of zonder
+    "OneDrive - " prefix). Daarom zoekt het script AUTOMATISCH naar de map "Klanten Dossiers"
+    onder "Techdienst - Documenten" in het profiel van de ingelogde gebruiker.
+    Werkt dit om een of andere reden niet, vul dan handmatig $BasePathOverride in.
 #>
 
 # ============================================================
-# CONFIGURATIE - pas hier het basispad aan indien nodig
+# CONFIGURATIE
 # ============================================================
-$BasePath = "C:\Users\niels\OneDrive - Lipa NV\Techdienst - Documenten\Klanten Dossiers"
+# Laat leeg ("") om automatisch te zoeken. Vul enkel in als de automatische
+# detectie niet werkt op een bepaalde pc (bv. afwijkende mapstructuur).
+$BasePathOverride = ""
+
+# Naam van de map die we zoeken, en het pad-fragment waaronder die moet staan
+$TargetFolderName = "Klanten Dossiers"
+$RequiredParentFragment = "Techdienst - Documenten"
 
 # Standaard submappen die in elke klantmap moeten komen
 $SubFolders = @("Clients", "Netwerk", "M365", "Security")
 
 # ============================================================
+# BASISPAD BEPALEN (automatisch of via override)
+# ============================================================
+if (-not [string]::IsNullOrWhiteSpace($BasePathOverride)) {
+    $BasePath = $BasePathOverride
+}
+else {
+    Write-Host "Bezig met zoeken naar '$TargetFolderName' onder '$RequiredParentFragment'..."
+
+    $Gevonden = Get-ChildItem -Path $env:USERPROFILE -Directory -Recurse -Depth 4 -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.Name -ieq $TargetFolderName -and
+            $_.FullName -imatch [Regex]::Escape($RequiredParentFragment)
+        }
+
+    if (-not $Gevonden) {
+        Write-Host "Kon geen map '$TargetFolderName' vinden onder een map die '$RequiredParentFragment' bevat." -ForegroundColor Red
+        Write-Host "Controleer of OneDrive/SharePoint correct gesynct is, of vul `$BasePathOverride handmatig in." -ForegroundColor Red
+        Read-Host "Druk op Enter om af te sluiten"
+        exit 1
+    }
+
+    if ($Gevonden.Count -gt 1) {
+        Write-Host "Er zijn meerdere mogelijke locaties gevonden:" -ForegroundColor Yellow
+        $Gevonden | ForEach-Object { Write-Host "  - $($_.FullName)" }
+        Write-Host "De eerste wordt gebruikt. Vul `$BasePathOverride in indien dit niet de juiste is." -ForegroundColor Yellow
+    }
+
+    $BasePath = $Gevonden[0].FullName
+}
+
+Write-Host "Basispad: $BasePath" -ForegroundColor Cyan
+
+# ============================================================
 # CONTROLE: bestaat het basispad?
 # ============================================================
 if (-not (Test-Path -LiteralPath $BasePath)) {
-    Write-Host "Het basispad '$BasePath' bestaat niet. Controleer de variabele `$BasePath in het script." -ForegroundColor Red
+    Write-Host "Het basispad '$BasePath' bestaat niet." -ForegroundColor Red
     Read-Host "Druk op Enter om af te sluiten"
     exit 1
 }
