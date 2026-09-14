@@ -80,6 +80,3 @@ while ($true) {
     
     Clear-Host
 }
-    
-    Clear-Host
-}
